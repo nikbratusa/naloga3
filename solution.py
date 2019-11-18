@@ -133,6 +133,7 @@ def power_iteration(X):
     Compute the eigenvector with the greatest eigenvalue
     of the covariance matrix of X (a numpy array).
 
+
     Return two values:
     - the eigenvector (1D numpy array) and
     - the corresponding eigenvalue (a float)
