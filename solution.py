@@ -72,9 +72,9 @@ def prepare_data_matrix():
     trojkeJeziki = {k: set(kmers(data[k], 3)) for k in data.keys()}
 
 
-    print(trojkeFrekvence["rus"])
-    print(trojkeFrekvence["rus"].keys())
-    print(trojkeFrekvence["rus"]["ja "])
+    #print(trojkeFrekvence["rus"])
+    #print(trojkeFrekvence["rus"].keys())
+    #print(trojkeFrekvence["rus"]["ja "])
 
 
     #sprehodimo se cez vse trojke v vseh jezikih in ustvarimo list vseh trojk, ki obstajajo brez ponavljanja
@@ -97,7 +97,7 @@ def prepare_data_matrix():
 
     #potem uredimo slovar po vrednosti od najnižjih do največjih in vzamemo samo prvih 100 vrednosti, ki imajo najmanjši idf kar pomeni, da so to najpogostejše trojke
     trojkeSorted = sorted(trojkeSlovar.items(), key=lambda x: x[1])[:100]
-    print(trojkeSorted)
+    #print(trojkeSorted)
 
     #ustvarimo se list kjer so sedaj samo trojke, saj idf ni vec pomemben. S tem listom bomo preverili koliko se pojavljajo v posameznem jeziku
     trojkeSortedList = []
@@ -107,10 +107,10 @@ def prepare_data_matrix():
         trojkeSortedList.append(trojkeSorted[count][0])
         count += 1
 
-    print(trojkeSortedList)
+    #print(trojkeSortedList)
     #ustvarimo prazno matriko
     X = np.empty((0,100), int)
-    print(X)
+    #print(X)
 
 
     for l in languages:
@@ -133,12 +133,29 @@ def power_iteration(X):
     Compute the eigenvector with the greatest eigenvalue
     of the covariance matrix of X (a numpy array).
 
-
     Return two values:
     - the eigenvector (1D numpy array) and
     - the corresponding eigenvalue (a float)
     """
-    pass
+
+    X = np.transpose(X)
+
+    Xcov = np.cov(X)
+
+    r = np.size(Xcov,0)
+    enotski = np.ones(r)
+
+    for i in range(100):
+        Xe = Xcov.dot(enotski)
+        #print(Xe)
+        nor = np.linalg.norm(Xe)
+
+        enotski = Xe/nor
+
+    eigenvector = enotski
+
+
+    return eigenvector,nor
 
 
 def power_iteration_two_components(X):
@@ -150,7 +167,22 @@ def power_iteration_two_components(X):
     - the two eigenvectors (2D numpy array, each eigenvector in a row) and
     - the corresponding eigenvalues (a 1D numpy array)
     """
-    pass
+    #naredimo power iteration za prvo komponento
+    v1,e1 = power_iteration(X)
+
+    #podatke projeciramo na dobljeni lastni vektor in dobljeno odstejemo od podatkov
+    proj = X.dot(v1)
+    novi = np.outer(proj,v1)
+    Xn = X - novi
+
+    #ponovno pozenemo power iteration nad novo matriko
+    v2, e2 = power_iteration(Xn)
+
+    #pripravimo podatke za vračanje
+    evec = np.array([v1,v2])
+    ev = np.array([e1,e2])
+
+    return evec,ev
 
 
 def project_to_eigenvectors(X, vecs):
@@ -159,7 +191,13 @@ def project_to_eigenvectors(X, vecs):
     The output array should have as many rows as X and as many columns as there
     are vectors.
     """
-    pass
+    X = X - np.mean(X, axis=0)
+
+
+    Z = np.dot(X,vecs.T)
+
+
+    return Z
 
 
 def total_variance(X):
@@ -174,7 +212,9 @@ def explained_variance_ratio(X, eigenvectors, eigenvalues):
     """
     Compute explained variance ratio.
     """
-    pass
+    r = sum(eigenvalues)/total_variance(X)
+
+    return r
 
 
 if __name__ == "__main__":
@@ -182,6 +222,9 @@ if __name__ == "__main__":
     # prepare the data matrix
     X, languages = prepare_data_matrix()
 
+    #transponiramo matriko x
+    evec,eval = power_iteration_two_components(X)
+    project = project_to_eigenvectors(X,evec)
     # PCA
     # ...
 
