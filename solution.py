@@ -4,6 +4,7 @@ import os.path
 from transliterate import translit
 from collections import Counter
 import math
+import matplotlib.pyplot as plt
 
 #funkcija za ustvarjanje trojk iz prejšnje naloge
 def kmers(s, k=3):
@@ -137,23 +138,22 @@ def power_iteration(X):
     - the eigenvector (1D numpy array) and
     - the corresponding eigenvalue (a float)
     """
-
+    #matriko transponiramo in izračunamo njeno kovariančno matriko
     X = np.transpose(X)
-
     Xcov = np.cov(X)
 
+    #izvemo n matrike in ustvarimo enotski vektor dolzine n
     r = np.size(Xcov,0)
     enotski = np.ones(r)
 
+    #do konvergiranja izvajamo power method, v našem primeru je 100 dovolj
     for i in range(100):
         Xe = Xcov.dot(enotski)
-        #print(Xe)
         nor = np.linalg.norm(Xe)
-
         enotski = Xe/nor
 
     eigenvector = enotski
-
+    #vrnemo lastno vrednost in lastni vektor
 
     return eigenvector,nor
 
@@ -191,13 +191,14 @@ def project_to_eigenvectors(X, vecs):
     The output array should have as many rows as X and as many columns as there
     are vectors.
     """
+    #matriko centriramo
     X = X - np.mean(X, axis=0)
 
+    #naredimo projekcijo
+    Proj = np.dot(X,vecs.T)
 
-    Z = np.dot(X,vecs.T)
 
-
-    return Z
+    return Proj
 
 
 def total_variance(X):
@@ -212,6 +213,7 @@ def explained_variance_ratio(X, eigenvectors, eigenvalues):
     """
     Compute explained variance ratio.
     """
+    #izracunamo explained variance ratio, ki je enaka vsoti lastnih vrednosti / total variance
     r = sum(eigenvalues)/total_variance(X)
 
     return r
@@ -222,11 +224,22 @@ if __name__ == "__main__":
     # prepare the data matrix
     X, languages = prepare_data_matrix()
 
-    #transponiramo matriko x
+
     evec,eval = power_iteration_two_components(X)
     project = project_to_eigenvectors(X,evec)
+
     # PCA
-    # ...
+    evec, eval = power_iteration_two_components(X)
+    project = project_to_eigenvectors(X, evec)
+    evr = explained_variance_ratio(X,evec,eval)
 
     # plotting
-    # ...
+
+    listX = list(project[:,0])
+    listY = list(project[:,1])
+
+    plt.scatter(listX,listY, color = "blue")
+    for i, txt in enumerate(languages):
+        plt.annotate(txt, (listX[i], listY[i]))
+    plt.title("Explained variance: %f" % (evr) )
+    plt.show()
